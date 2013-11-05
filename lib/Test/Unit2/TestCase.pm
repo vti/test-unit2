@@ -121,6 +121,7 @@ sub _assert_deep_equals {
 
             for (my $i = 0; $i < @expected_keys; $i++) {
                 return 0 unless $expected_keys[$i] eq $got_keys[$i];
+                return 0 unless $self->_assert_deep_equals($expected_keys[$i], $got_keys[$i]);
             }
 
             foreach my $key (keys %$expected) {
@@ -135,7 +136,7 @@ sub _assert_deep_equals {
             return 0 unless @$expected == @$got;
 
             for (my $i = 0; $i < @$expected; $i++) {
-                return 0 unless $expected->[$i] eq $got->[$i];
+                return 0 unless $self->_assert_deep_equals($expected->[$i], $got->[$i]);
             }
 
             $ok = 1;
