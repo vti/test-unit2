@@ -26,16 +26,19 @@ sub execute {
 
     my @test_methods = $self->_find_test_methods_recursive($test_case);
 
-    $self->{_test_case_ok} = 1;
+    my $context = $self->{_context} = {
+        ok        => 1,
+        test_case => $test_case
+    };
 
-    $self->notify('before:test_case', $test_case);
+    $self->notify('before:test_case', $context);
 
     foreach my $test_method (@test_methods) {
-        $self->{_test_method_ok} = 1;
+        push @{$context->{methods}}, {test_method => $test_method, ok => 1};
 
         $self->set_up;
 
-        $self->notify('before:test_method', $test_method);
+        $self->notify('before:test_method', $context);
 
         my $e;
 
@@ -43,18 +46,17 @@ sub execute {
         eval { $self->$test_method; 1 } or do { $e = $@ };
 
         if ($e) {
-            $self->{_test_method_ok} = 0;
-            $self->{_test_case_ok}   = 0;
-            $self->notify('after:test_method', error => $e);
+            $context->{ok}                     = 0;
+            $context->{methods}->[-1]->{ok}    = 0;
+            $context->{methods}->[-1]->{error} = $e;
         }
-        else {
-            $self->notify('after:test_method', ok => $self->{_test_method_ok});
-        }
+
+        $self->notify('after:test_method', $context);
 
         $self->tear_down;
     }
 
-    $self->notify('after:test_case', $self->{_test_case_ok});
+    $self->notify('after:test_case', $context);
 
     return $self;
 }
@@ -255,10 +257,13 @@ sub assert {
 
     $ok = !!$ok;
 
-    $self->notify('after:assert', $ok);
+    my $context = $self->{_context};
+    if ($context && %$context) {
+        $context->{methods}->[-1]->{ok} = $ok ? 1 : 0;
+        $context->{ok} = $ok ? 1 : 0;
+    }
 
-    $self->{_test_method_ok} = 0 unless $ok;
-    $self->{_test_case_ok}   = 0 unless $ok;
+    $self->notify('after:assert', $context);
 
     return $ok;
 }

@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Storable qw(dclone);
 
 use Test::Unit2::TestCase;
 
@@ -10,12 +11,29 @@ subtest 'success notify before/after test_case' => sub {
     my @after;
 
     my $case = TestCaseSuccess->new;
-    $case->bind('before:test_case', sub { push @before, @_ });
-    $case->bind('after:test_case',  sub { push @after,  @_ });
+    $case->bind(
+        'before:test_case' => sub {
+            push @before, map { dclone($_) } @_;
+        }
+    );
+    $case->bind(
+        'after:test_case' => sub {
+            push @after, map { dclone($_) } @_;
+        }
+    );
     $case->execute;
 
-    is_deeply(\@before, ['TestCaseSuccess']);
-    is_deeply(\@after,  [1]);
+    is_deeply(\@before, [{test_case => 'TestCaseSuccess', ok => 1}]);
+    is_deeply(
+        \@after,
+        [
+            {
+                test_case => 'TestCaseSuccess',
+                ok        => 1,
+                methods   => [{test_method => 'test_hi', ok => 1}]
+            }
+        ]
+    );
 };
 
 subtest 'success notify before/after test_method' => sub {
@@ -23,12 +41,38 @@ subtest 'success notify before/after test_method' => sub {
     my @after;
 
     my $case = TestCaseSuccess->new;
-    $case->bind('before:test_method', sub { push @before, @_ });
-    $case->bind('after:test_method',  sub { push @after,  @_ });
+    $case->bind(
+        'before:test_method' => sub {
+            push @before, map { dclone($_) } @_;
+        }
+    );
+    $case->bind(
+        'after:test_method' => sub {
+            push @after, map { dclone($_) } @_;
+        }
+    );
     $case->execute;
 
-    is_deeply(\@before, ['test_hi']);
-    is_deeply(\@after, [ok => 1]);
+    is_deeply(
+        \@before,
+        [
+            {
+                test_case => 'TestCaseSuccess',
+                ok        => 1,
+                methods   => [{test_method => 'test_hi', ok => 1}]
+            }
+        ]
+    );
+    is_deeply(
+        \@before,
+        [
+            {
+                test_case => 'TestCaseSuccess',
+                ok        => 1,
+                methods   => [{test_method => 'test_hi', ok => 1}]
+            }
+        ]
+    );
 };
 
 subtest 'failure notify before/after test_case' => sub {
@@ -36,12 +80,29 @@ subtest 'failure notify before/after test_case' => sub {
     my @after;
 
     my $case = TestCaseFailure->new;
-    $case->bind('before:test_case', sub { push @before, @_ });
-    $case->bind('after:test_case',  sub { push @after,  @_ });
+    $case->bind(
+        'before:test_case' => sub {
+            push @before, map { dclone($_) } @_;
+        }
+    );
+    $case->bind(
+        'after:test_case' => sub {
+            push @after, map { dclone($_) } @_;
+        }
+    );
     $case->execute;
 
-    is_deeply(\@before, ['TestCaseFailure']);
-    is_deeply(\@after,  [0]);
+    is_deeply(\@before, [{test_case => 'TestCaseFailure', ok => 1}]);
+    is_deeply(
+        \@after,
+        [
+            {
+                test_case => 'TestCaseFailure',
+                ok        => 0,
+                methods   => [{test_method => 'test_hi', ok => 0}]
+            }
+        ]
+    );
 };
 
 subtest 'failure notify before/after test_method' => sub {
@@ -49,12 +110,38 @@ subtest 'failure notify before/after test_method' => sub {
     my @after;
 
     my $case = TestCaseFailure->new;
-    $case->bind('before:test_method', sub { push @before, @_ });
-    $case->bind('after:test_method',  sub { push @after,  @_ });
+    $case->bind(
+        'before:test_method' => sub {
+            push @before, map { dclone($_) } @_;
+        }
+    );
+    $case->bind(
+        'after:test_method' => sub {
+            push @after, map { dclone($_) } @_;
+        }
+    );
     $case->execute;
 
-    is_deeply(\@before, ['test_hi']);
-    is_deeply(\@after, [ok => 0]);
+    is_deeply(
+        \@before,
+        [
+            {
+                test_case => 'TestCaseFailure',
+                ok        => 1,
+                methods   => [{test_method => 'test_hi', ok => 1}]
+            }
+        ]
+    );
+    is_deeply(
+        \@after,
+        [
+            {
+                test_case => 'TestCaseFailure',
+                ok        => 0,
+                methods   => [{test_method => 'test_hi', ok => 0}]
+            }
+        ]
+    );
 };
 
 subtest 'error notify before/after test_case' => sub {
@@ -62,12 +149,35 @@ subtest 'error notify before/after test_case' => sub {
     my @after;
 
     my $case = TestCaseError->new;
-    $case->bind('before:test_case', sub { push @before, @_ });
-    $case->bind('after:test_case',  sub { push @after,  @_ });
+    $case->bind(
+        'before:test_case' => sub {
+            push @before, map { dclone($_) } @_;
+        }
+    );
+    $case->bind(
+        'after:test_case' => sub {
+            push @after, map { dclone($_) } @_;
+        }
+    );
     $case->execute;
 
-    is_deeply(\@before, ['TestCaseError']);
-    is_deeply(\@after,  [0]);
+    is_deeply(\@before, [{test_case => 'TestCaseError', ok => 1}]);
+    is_deeply(
+        \@after,
+        [
+            {
+                test_case => 'TestCaseError',
+                ok        => 0,
+                methods   => [
+                    {
+                        test_method => 'test_hi',
+                        ok          => 0,
+                        error       => "here at t/test-case.t line 340.\n"
+                    }
+                ]
+            }
+        ]
+    );
 };
 
 subtest 'error notify before/after test_method' => sub {
@@ -75,12 +185,44 @@ subtest 'error notify before/after test_method' => sub {
     my @after;
 
     my $case = TestCaseError->new;
-    $case->bind('before:test_method', sub { push @before, @_ });
-    $case->bind('after:test_method',  sub { push @after,  @_ });
+    $case->bind(
+        'before:test_method' => sub {
+            push @before, map { dclone($_) } @_;
+        }
+    );
+    $case->bind(
+        'after:test_method' => sub {
+            push @after, map { dclone($_) } @_;
+        }
+    );
     $case->execute;
 
-    is_deeply(\@before, ['test_hi']);
-    is_deeply(\@after, [error => "here at t/test-case.t line 196.\n"]);
+    is_deeply(
+        \@before,
+        [
+            {
+                test_case => 'TestCaseError',
+                ok        => 1,
+                methods   => [{test_method => 'test_hi', ok => 1}]
+            }
+        ]
+    );
+    is_deeply(
+        \@after,
+        [
+            {
+                test_case => 'TestCaseError',
+                ok        => 0,
+                methods   => [
+                    {
+                        test_method => 'test_hi',
+                        ok          => 0,
+                        error       => "here at t/test-case.t line 340.\n"
+                    }
+                ]
+            }
+        ]
+    );
 };
 
 subtest 'call set_up/tear_down' => sub {
@@ -128,6 +270,7 @@ subtest 'run inherited test methods' => sub {
     my @RUN;
 
     {
+
         package TestCaseParent;
         use base 'Test::Unit2::TestCase';
 
@@ -152,6 +295,7 @@ subtest 'run inherited test methods' => sub {
     }
 
     {
+
         package TestCaseChild;
         use base 'TestCaseParent';
 
