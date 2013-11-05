@@ -186,6 +186,42 @@ sub assert_str_not_equals {
     return $self->assert($ok);
 }
 
+sub assert_num_equals {
+    my $self = shift;
+    my ($expected, $got) = @_;
+
+    my $ok = 0;
+    if (!defined($expected) && !defined($got)) {
+        $ok = 1;
+    }
+    elsif (!defined($expected) || !defined($got)) {
+        $ok = 0;
+    }
+    elsif ($expected == $got) {
+        $ok = 1;
+    }
+
+    return $self->assert($ok);
+}
+
+sub assert_num_not_equals {
+    my $self = shift;
+    my ($expected, $got) = @_;
+
+    my $ok = 0;
+    if (!defined($expected) && !defined($got)) {
+        $ok = 0;
+    }
+    elsif (!defined($expected) || !defined($got)) {
+        $ok = 1;
+    }
+    elsif ($expected != $got) {
+        $ok = 1;
+    }
+
+    return $self->assert($ok);
+}
+
 sub assert_null {
     my $self = shift;
     my ($got) = @_;

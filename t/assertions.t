@@ -35,6 +35,26 @@ subtest 'assert_str_not_equals' => sub {
     ok $case->assert_str_not_equals('expected', 'got');
 };
 
+subtest 'assert_num_equals' => sub {
+    my $case = _build_case();
+
+    ok $case->assert_num_equals(1,     1);
+    ok $case->assert_num_equals(undef, undef);
+
+    ok !$case->assert_num_equals(1, undef);
+    ok !$case->assert_num_equals(1, 2);
+};
+
+subtest 'assert_num_not_equals' => sub {
+    my $case = _build_case();
+
+    ok $case->assert_num_not_equals(1,     2);
+    ok $case->assert_num_not_equals(undef, 1);
+
+    ok !$case->assert_num_not_equals(1, 1);
+    ok !$case->assert_num_not_equals(undef, undef);
+};
+
 subtest 'assert_raises' => sub {
     my $case = _build_case();
 
