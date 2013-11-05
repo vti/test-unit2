@@ -3,6 +3,8 @@ package Test::Unit2::TestCase;
 use strict;
 use warnings;
 
+use Scalar::Util qw(blessed);
+
 sub new {
     my $class = shift;
 
@@ -54,6 +56,41 @@ sub execute {
     $self->notify('after:test_case', $self->{_test_case_ok});
 
     return $self;
+}
+
+sub assert_raises {
+    my $self = shift;
+    my $cb = pop;
+
+    my ($isa, $re);
+
+    if (@_ == 2) {
+        ($isa, $re) = @_;
+    }
+    elsif (@_ == 1) {
+        if (ref $_[0] eq 'Regexp') {
+            $re = $_[0];
+        }
+        else {
+            $isa = $_[0];
+        }
+    }
+
+    eval { $cb->(); 1 } or do {
+        my $e = $@;
+
+        if ($re) {
+            return $e =~ m/$re/;
+        }
+
+        if ($isa) {
+            return blessed($e) && $e->isa($isa);
+        }
+
+        return 1;
+    };
+
+    return 0;
 }
 
 sub assert_deep_equals {

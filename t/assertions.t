@@ -35,6 +35,22 @@ subtest 'assert_str_not_equals' => sub {
     ok $case->assert_str_not_equals('expected', 'got');
 };
 
+subtest 'assert_raises' => sub {
+    my $case = _build_case();
+
+    ok $case->assert_raises(sub { die 'here' });
+    ok $case->assert_raises(qr/here/, sub { die 'here' });
+    ok $case->assert_raises('Exception', qr/here/, sub { die Exception->new('here') });
+    ok $case->assert_raises(qr/here/, sub { die Exception->new('here') });
+    ok $case->assert_raises('Exception', sub { die Exception->new });
+
+    ok! $case->assert_raises(sub { });
+    ok! $case->assert_raises(qr/here/, sub { die 'haha' });
+    ok! $case->assert_raises('Exception', qr/here/, sub { die Exception->new('haha') });
+    ok! $case->assert_raises(qr/here/, sub { die Exception->new('haha') });
+    ok! $case->assert_raises('AnotherException', sub { die Exception->new });
+};
+
 subtest 'assert_deep_equals' => sub {
     my $case = _build_case();
 
@@ -58,3 +74,17 @@ subtest 'assert_deep_equals' => sub {
 sub _build_case { Test::Unit2::TestCase->new }
 
 done_testing;
+
+package Exception;
+
+use overload '""' => \&to_string, fallback => 1;
+sub new {
+    my $class = shift;
+    my ($message) = @_;
+
+    my $self = {message => $message};
+    bless $self, $class;
+
+    return $self;
+}
+sub to_string { shift->{message} }
