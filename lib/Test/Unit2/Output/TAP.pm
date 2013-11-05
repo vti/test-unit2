@@ -10,6 +10,7 @@ sub new {
     bless $self, $class;
 
     $self->{counter} = 0;
+    $self->{fails}   = 0;
 
     return $self;
 }
@@ -32,6 +33,10 @@ sub watch {
             print "    ", $ok ? "ok" : "not ok",
               " $method_counter - $method_context->{test_method}\n";
 
+            if (my $error = $method_context->{error}) {
+                print $error, "\n";
+            }
+
             if (!$ok) {
                 print "    ", "# Failed test\n";
             }
@@ -49,6 +54,10 @@ sub watch {
             print "    ", "1..$method_counter", "\n";
             print $ok ? "ok" : "not ok",
               " $self->{counter} - $context->{test_case}\n";
+
+            if (!$ok) {
+                $self->{fails}++;
+            }
         }
     );
 }
@@ -57,6 +66,11 @@ sub finalize {
     my $self = shift;
 
     print "1..$self->{counter}\n";
+
+    if ($self->{fails}) {
+        print
+          "# Looks like you failed $self->{fails} test of $self->{counter}.\n";
+    }
 }
 
 1;
