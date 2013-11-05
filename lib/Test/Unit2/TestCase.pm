@@ -16,6 +16,9 @@ sub new {
     return $self;
 }
 
+sub set_up    { }
+sub tear_down { }
+
 sub execute {
     my $self = shift;
 
@@ -37,7 +40,7 @@ sub execute {
     foreach my $test_method (@test_methods) {
         $self->{_test_method_ok} = 1;
 
-        $self->set_up if $self->can('set_up');
+        $self->set_up;
 
         $self->notify('before:test_method', $test_method);
 
@@ -54,7 +57,7 @@ sub execute {
             $self->notify('after:test_method', ok => $self->{_test_method_ok});
         }
 
-        $self->tear_down if $self->can('tear_down');
+        $self->tear_down;
     }
 
     $self->notify('after:test_case', $self->{_test_case_ok});
@@ -64,7 +67,7 @@ sub execute {
 
 sub assert_raises {
     my $self = shift;
-    my $cb = pop;
+    my $cb   = pop;
 
     my ($isa, $re);
 
@@ -128,7 +131,9 @@ sub _assert_deep_equals {
             }
 
             foreach my $key (keys %$expected) {
-                return 0 unless $self->_assert_deep_equals($expected->{$key}, $got->{$key});
+                return 0
+                  unless $self->_assert_deep_equals($expected->{$key},
+                    $got->{$key});
             }
 
             $ok = 1;
