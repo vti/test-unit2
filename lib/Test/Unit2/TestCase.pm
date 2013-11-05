@@ -37,6 +37,8 @@ sub execute {
     foreach my $test_method (@test_methods) {
         $self->{_test_method_ok} = 1;
 
+        $self->set_up if $self->can('set_up');
+
         $self->notify('before:test_method', $test_method);
 
         my $e;
@@ -51,6 +53,8 @@ sub execute {
         else {
             $self->notify('after:test_method', ok => $self->{_test_method_ok});
         }
+
+        $self->tear_down if $self->can('tear_down');
     }
 
     $self->notify('after:test_case', $self->{_test_case_ok});

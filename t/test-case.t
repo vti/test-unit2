@@ -28,7 +28,7 @@ subtest 'success notify before/after test_method' => sub {
     $case->execute;
 
     is_deeply(\@before, ['test_hi']);
-    is_deeply(\@after,  [ok => 1]);
+    is_deeply(\@after, [ok => 1]);
 };
 
 subtest 'failure notify before/after test_case' => sub {
@@ -54,7 +54,48 @@ subtest 'failure notify before/after test_method' => sub {
     $case->execute;
 
     is_deeply(\@before, ['test_hi']);
-    is_deeply(\@after,  [ok => 0]);
+    is_deeply(\@after, [ok => 0]);
+};
+
+subtest 'call set_up/tear_down' => sub {
+    my @RUN;
+
+    {
+
+        package TestCaseWithSetup;
+        use base 'Test::Unit2::TestCase';
+
+        sub new {
+            my $self = shift->SUPER::new(@_);
+            my (%params) = @_;
+
+            $self->{run} = $params{run};
+
+            return $self;
+        }
+
+        sub set_up {
+            my $self = shift;
+
+            push @{$self->{run}}, 'set_up';
+        }
+
+        sub tear_down {
+            my $self = shift;
+
+            push @{$self->{run}}, 'tear_down';
+        }
+
+        sub test_me {
+            my $self = shift;
+            push @{$self->{run}}, 'test';
+        }
+    }
+
+    my $case = TestCaseWithSetup->new(run => \@RUN);
+    $case->execute;
+
+    is_deeply(\@RUN, ['set_up', 'test', 'tear_down']);
 };
 
 done_testing;
