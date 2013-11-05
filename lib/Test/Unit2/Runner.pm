@@ -34,9 +34,12 @@ sub run {
     my $result       = 1;
     my $test_methods = 0;
     foreach my $test_file (@test_files) {
-        eval { require $test_file; 1 } or die $!;
         my $package = do { open my $fh, '<', $test_file; <$fh> };
         ($package) = $package =~ m/^\s*package\s+(.*?)\s*;/;
+
+        if (!$package->can('new')) {
+            eval { require $test_file; 1 } or die $@;
+        }
 
         my $test_case = $package->new;
 
