@@ -57,6 +57,32 @@ subtest 'failure notify before/after test_method' => sub {
     is_deeply(\@after, [ok => 0]);
 };
 
+subtest 'error notify before/after test_case' => sub {
+    my @before;
+    my @after;
+
+    my $case = TestCaseError->new;
+    $case->bind('before:test_case', sub { push @before, @_ });
+    $case->bind('after:test_case',  sub { push @after,  @_ });
+    $case->execute;
+
+    is_deeply(\@before, ['TestCaseError']);
+    is_deeply(\@after,  [0]);
+};
+
+subtest 'error notify before/after test_method' => sub {
+    my @before;
+    my @after;
+
+    my $case = TestCaseError->new;
+    $case->bind('before:test_method', sub { push @before, @_ });
+    $case->bind('after:test_method',  sub { push @after,  @_ });
+    $case->execute;
+
+    is_deeply(\@before, ['test_hi']);
+    is_deeply(\@after, [error => "here at t/test-case.t line 196.\n"]);
+};
+
 subtest 'call set_up/tear_down' => sub {
     my @RUN;
 
@@ -159,4 +185,13 @@ sub test_hi {
     my $self = shift;
 
     $self->assert_str_equals('expected', 'got');
+}
+
+package TestCaseError;
+use base 'Test::Unit2::TestCase';
+
+sub test_hi {
+    my $self = shift;
+
+    die 'here';
 }

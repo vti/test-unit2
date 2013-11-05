@@ -44,6 +44,7 @@ sub execute {
 
         if ($e) {
             $self->{_test_method_ok} = 0;
+            $self->{_test_case_ok}   = 0;
             $self->notify('after:test_method', error => $e);
         }
         else {
