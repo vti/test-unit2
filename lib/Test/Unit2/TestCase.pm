@@ -80,17 +80,17 @@ sub assert_raises {
         my $e = $@;
 
         if ($re) {
-            return $e =~ m/$re/;
+            return $self->assert($e =~ m/$re/);
         }
 
         if ($isa) {
-            return blessed($e) && $e->isa($isa);
+            return $self->assert(blessed($e) && $e->isa($isa));
         }
 
-        return 1;
+        return $self->assert(1);
     };
 
-    return 0;
+    return $self->assert(0);
 }
 
 sub assert_deep_equals {
