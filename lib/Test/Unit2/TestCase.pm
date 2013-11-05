@@ -236,6 +236,20 @@ sub assert_not_null {
     return $self->assert(defined($got));
 }
 
+sub assert_matches {
+    my $self = shift;
+    my ($re, $got) = @_;
+
+    return $self->assert($got =~ m/$re/);
+}
+
+sub assert_not_matches {
+    my $self = shift;
+    my ($re, $got) = @_;
+
+    return $self->assert($got !~ m/$re/);
+}
+
 sub assert {
     my $self = shift;
     my ($ok) = @_;

@@ -107,6 +107,22 @@ subtest 'assert_not_null' => sub {
     ok !$case->assert_not_null(undef);
 };
 
+subtest 'assert_matches' => sub {
+    my $case = _build_case();
+
+    ok $case->assert_matches(qr/\d+/, 1);
+
+    ok !$case->assert_matches(qr/\d+/, 'abc');
+};
+
+subtest 'assert_not_matches' => sub {
+    my $case = _build_case();
+
+    ok $case->assert_not_matches(qr/\d+/, 'abc');
+
+    ok !$case->assert_not_matches(qr/\d+/, 1);
+};
+
 sub _build_case { Test::Unit2::TestCase->new }
 
 done_testing;
