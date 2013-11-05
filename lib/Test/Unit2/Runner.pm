@@ -4,13 +4,16 @@ use strict;
 use warnings;
 
 use File::Find ();
-use Test::Unit2::Output::TAP;
+use Test::Unit2::Output::Default;
 
 sub new {
     my $class = shift;
+    my (%params) = @_;
 
     my $self = {};
     bless $self, $class;
+
+    $self->{output} = $params{output} || Test::Unit2::Output::Default->new;
 
     return $self;
 }
@@ -29,7 +32,9 @@ sub run {
         @directories
     );
 
-    my $output = Test::Unit2::Output::TAP->new;
+    my $output = Test::Unit2::Output::Default->new;
+
+    $output->start;
 
     foreach my $test_file (@test_files) {
         my $package = do { open my $fh, '<', $test_file; <$fh> };
