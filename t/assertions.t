@@ -71,6 +71,22 @@ subtest 'assert_deep_equals' => sub {
     ok !$case->assert_deep_equals([1, 2], [1, 2, 3]);
 };
 
+subtest 'assert_null' => sub {
+    my $case = _build_case();
+
+    ok $case->assert_null(undef);
+
+    ok !$case->assert_null(1);
+};
+
+subtest 'assert_not_null' => sub {
+    my $case = _build_case();
+
+    ok $case->assert_not_null(1);
+
+    ok !$case->assert_not_null(undef);
+};
+
 sub _build_case { Test::Unit2::TestCase->new }
 
 done_testing;

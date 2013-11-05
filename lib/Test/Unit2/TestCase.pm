@@ -186,6 +186,20 @@ sub assert_str_not_equals {
     return $self->assert($ok);
 }
 
+sub assert_null {
+    my $self = shift;
+    my ($got) = @_;
+
+    return $self->assert(!defined($got));
+}
+
+sub assert_not_null {
+    my $self = shift;
+    my ($got) = @_;
+
+    return $self->assert(defined($got));
+}
+
 sub assert {
     my $self = shift;
     my ($ok) = @_;
