@@ -272,6 +272,58 @@ subtest 'fail if one test fails' => sub {
     );
 };
 
+subtest 'stop on first failed assert' => sub {
+    my @before;
+    my @after;
+
+    {
+        package TestCaseStop;
+        use base 'Test::Unit2::TestCase';
+
+        sub test_me     {
+            my $self = shift;
+
+            $self->assert(1);
+            $self->assert(0);
+            $self->assert(1);
+        }
+    }
+
+    my $case = TestCaseStop->new;
+    $case->bind(
+        'before:test_case' => sub {
+            push @before, map { dclone($_) } @_;
+        }
+    );
+    $case->bind(
+        'after:test_case' => sub {
+            push @after, map { dclone($_) } @_;
+        }
+    );
+    $case->execute;
+
+    is_deeply(
+        \@before,
+        [
+            {
+                test_case => 'TestCaseStop',
+            }
+        ]
+    );
+    is_deeply(
+        \@after,
+        [
+            {
+                test_case => 'TestCaseStop',
+                ok        => 0,
+                methods   => [
+                    {test_method => 'test_me', ok => 0},
+                ]
+            }
+        ]
+    );
+};
+
 subtest 'call set_up/tear_down' => sub {
     my @RUN;
 

@@ -256,7 +256,12 @@ sub assert {
 
     my $context = $self->{_context};
     if ($context && %$context) {
-        $context->{methods}->[-1]->{ok} = $ok ? 1 : 0;
+        if (exists $context->{methods}->[-1]->{ok}) {
+            $context->{methods}->[-1]->{ok} = 0 unless $ok;
+        }
+        else {
+            $context->{methods}->[-1]->{ok} = $ok ? 1 : 0;
+        }
 
         if (exists $context->{ok}) {
             $context->{ok} = 0 unless $ok;
