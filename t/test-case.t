@@ -98,6 +98,44 @@ subtest 'call set_up/tear_down' => sub {
     is_deeply(\@RUN, ['set_up', 'test', 'tear_down']);
 };
 
+subtest 'run inherited test methods' => sub {
+    my @RUN;
+
+    {
+        package TestCaseParent;
+        use base 'Test::Unit2::TestCase';
+
+        sub new {
+            my $self = shift->SUPER::new(@_);
+            my (%params) = @_;
+
+            $self->{run} = $params{run};
+
+            return $self;
+        }
+
+        sub test_parent {
+            my $self = shift;
+            push @{$self->{run}}, 'test_parent';
+        }
+    }
+
+    {
+        package TestCaseChild;
+        use base 'TestCaseParent';
+
+        sub test_child {
+            my $self = shift;
+            push @{$self->{run}}, 'test_child';
+        }
+    }
+
+    my $case = TestCaseChild->new(run => \@RUN);
+    $case->execute;
+
+    is_deeply(\@RUN, ['test_child', 'test_parent']);
+};
+
 done_testing;
 
 package TestCaseSuccess;

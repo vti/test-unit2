@@ -24,14 +24,7 @@ sub execute {
 
     my $test_case = ref($self);
 
-    my @test_methods;
-    foreach my $test_class ($test_case, reverse @{$class::ISA || []}) {
-        my @parent_test_methods = $self->_find_test_methods($test_class);
-        foreach my $parent_test_method (@parent_test_methods) {
-            push @test_methods, $parent_test_method
-              unless grep { $parent_test_method eq $_ } @test_methods;
-        }
-    }
+    my @test_methods = $self->_find_test_methods_recursive($test_case);
 
     $self->{_test_case_ok} = 1;
 
@@ -287,6 +280,27 @@ sub notify {
     }
 
     return $self;
+}
+
+sub _find_test_methods_recursive {
+    my $self = shift;
+    my ($class) = @_;
+
+    my @classes = (
+        $class,
+        do { no strict; reverse @{"$class\::ISA"} }
+    );
+
+    my @test_methods;
+    foreach my $test_class (@classes) {
+        my @parent_test_methods = $self->_find_test_methods($test_class);
+        foreach my $parent_test_method (@parent_test_methods) {
+            push @test_methods, $parent_test_method
+              unless grep { $parent_test_method eq $_ } @test_methods;
+        }
+    }
+
+    return @test_methods;
 }
 
 sub _find_test_methods {
