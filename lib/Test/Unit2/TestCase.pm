@@ -27,14 +27,13 @@ sub execute {
     my @test_methods = $self->_find_test_methods_recursive($test_case);
 
     my $context = $self->{_context} = {
-        ok        => 1,
         test_case => $test_case
     };
 
     $self->notify('before:test_case', $context);
 
     foreach my $test_method (@test_methods) {
-        push @{$context->{methods}}, {test_method => $test_method, ok => 1};
+        push @{$context->{methods}}, {test_method => $test_method};
 
         $self->set_up;
 
@@ -260,7 +259,13 @@ sub assert {
     my $context = $self->{_context};
     if ($context && %$context) {
         $context->{methods}->[-1]->{ok} = $ok ? 1 : 0;
-        $context->{ok} = $ok ? 1 : 0;
+
+        if (exists $context->{ok}) {
+            $context->{ok} = 0 unless $ok;
+        }
+        else {
+            $context->{ok} = $ok ? 1 : 0;
+        }
     }
 
     $self->notify('after:assert', $context);
@@ -314,7 +319,7 @@ sub _find_test_methods {
     my ($class) = @_;
 
     no strict;
-    return grep { /^(?:test|should)_/ } keys %{$class . '::'};
+    return sort grep { /^(?:test|should)_/ } keys %{$class . '::'};
 }
 
 1;

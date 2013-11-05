@@ -23,7 +23,7 @@ subtest 'success notify before/after test_case' => sub {
     );
     $case->execute;
 
-    is_deeply(\@before, [{test_case => 'TestCaseSuccess', ok => 1}]);
+    is_deeply(\@before, [{test_case => 'TestCaseSuccess'}]);
     is_deeply(
         \@after,
         [
@@ -58,13 +58,12 @@ subtest 'success notify before/after test_method' => sub {
         [
             {
                 test_case => 'TestCaseSuccess',
-                ok        => 1,
-                methods   => [{test_method => 'test_hi', ok => 1}]
+                methods   => [{test_method => 'test_hi'}]
             }
         ]
     );
     is_deeply(
-        \@before,
+        \@after,
         [
             {
                 test_case => 'TestCaseSuccess',
@@ -92,7 +91,7 @@ subtest 'failure notify before/after test_case' => sub {
     );
     $case->execute;
 
-    is_deeply(\@before, [{test_case => 'TestCaseFailure', ok => 1}]);
+    is_deeply(\@before, [{test_case => 'TestCaseFailure'}]);
     is_deeply(
         \@after,
         [
@@ -127,8 +126,7 @@ subtest 'failure notify before/after test_method' => sub {
         [
             {
                 test_case => 'TestCaseFailure',
-                ok        => 1,
-                methods   => [{test_method => 'test_hi', ok => 1}]
+                methods   => [{test_method => 'test_hi'}]
             }
         ]
     );
@@ -161,7 +159,8 @@ subtest 'error notify before/after test_case' => sub {
     );
     $case->execute;
 
-    is_deeply(\@before, [{test_case => 'TestCaseError', ok => 1}]);
+    is_deeply(\@before, [{test_case => 'TestCaseError'}]);
+    like(delete $after[0]->{methods}->[0]->{error}, qr/here/);
     is_deeply(
         \@after,
         [
@@ -172,7 +171,6 @@ subtest 'error notify before/after test_case' => sub {
                     {
                         test_method => 'test_hi',
                         ok          => 0,
-                        error       => "here at t/test-case.t line 340.\n"
                     }
                 ]
             }
@@ -202,11 +200,11 @@ subtest 'error notify before/after test_method' => sub {
         [
             {
                 test_case => 'TestCaseError',
-                ok        => 1,
-                methods   => [{test_method => 'test_hi', ok => 1}]
+                methods   => [{test_method => 'test_hi'}]
             }
         ]
     );
+    like(delete $after[0]->{methods}->[0]->{error}, qr/here/);
     is_deeply(
         \@after,
         [
@@ -217,8 +215,57 @@ subtest 'error notify before/after test_method' => sub {
                     {
                         test_method => 'test_hi',
                         ok          => 0,
-                        error       => "here at t/test-case.t line 340.\n"
                     }
+                ]
+            }
+        ]
+    );
+};
+
+subtest 'fail if one test fails' => sub {
+    my @before;
+    my @after;
+
+    {
+        package TestCaseOneFails;
+        use base 'Test::Unit2::TestCase';
+
+        sub test_ok     { shift->assert(1) }
+        sub test_not_ok { shift->assert(0) }
+        sub test_z_ok   { shift->assert(1) }
+    }
+
+    my $case = TestCaseOneFails->new;
+    $case->bind(
+        'before:test_case' => sub {
+            push @before, map { dclone($_) } @_;
+        }
+    );
+    $case->bind(
+        'after:test_case' => sub {
+            push @after, map { dclone($_) } @_;
+        }
+    );
+    $case->execute;
+
+    is_deeply(
+        \@before,
+        [
+            {
+                test_case => 'TestCaseOneFails',
+            }
+        ]
+    );
+    is_deeply(
+        \@after,
+        [
+            {
+                test_case => 'TestCaseOneFails',
+                ok        => 0,
+                methods   => [
+                    {test_method => 'test_not_ok', ok => 0},
+                    {test_method => 'test_ok',     ok => 1},
+                    {test_method => 'test_z_ok',   ok => 1}
                 ]
             }
         ]
