@@ -11,8 +11,6 @@ sub new {
     my $self = {};
     bless $self, $class;
 
-    $self->{_tests_run} = 0;
-
     return $self;
 }
 
