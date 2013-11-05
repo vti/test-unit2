@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use File::Find ();
-use Class::Load;
 use Test::Unit2::Output::TAP;
 
 sub new {
