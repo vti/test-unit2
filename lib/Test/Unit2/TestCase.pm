@@ -271,6 +271,21 @@ sub assert {
         }
     }
 
+    $context->{methods}->[-1]->{caller} = (caller(0))[1]. ':'. (caller(0))[2];
+    $context->{methods}->[-1]->{assert} = (caller(0))[3] =~ m/([^:])+$/;
+
+    my $i = 0;
+    while (my @caller = caller($i++)) {
+        if ($caller[0] eq $context->{test_case}) {
+            my $assert = $caller[3];
+            $assert =~ s{.*::}{};
+            $context->{methods}->[-1]->{caller} = $caller[1]. ':'. $caller[2];
+            $context->{methods}->[-1]->{assert} = $assert;
+
+            last;
+        }
+    }
+
     $self->notify('after:assert', $context);
 
     return $ok;

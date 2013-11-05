@@ -70,7 +70,7 @@ sub watch {
                 $printed += $self->_print("OK");
             }
             else {
-                push @{$self->{fails}}, "$context->{test_case} - $method_context->{test_method}";
+                push @{$self->{fails}}, {%$context, method => $method_context};
 
                 $printed += $self->_print("." x ($cols - $printed - $right_offset + 1));
                 $printed += $self->_print("FAIL");
@@ -109,7 +109,8 @@ sub finalize {
         my $counter = 1;
         print "\nFAILS:\n";
         foreach my $fail (@fails) {
-            print "$counter) $fail\n";
+            print "$counter) $fail->{method}->{caller} - $fail->{method}->{test_method} ($fail->{test_case})\n";
+            print $fail->{method}->{assert}, "\n";
             $counter++;
         }
     }
