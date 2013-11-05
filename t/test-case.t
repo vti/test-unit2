@@ -114,6 +114,11 @@ subtest 'run inherited test methods' => sub {
             return $self;
         }
 
+        sub test_child {
+            my $self = shift;
+            push @{$self->{run}}, 'test_child_old';
+        }
+
         sub test_parent {
             my $self = shift;
             push @{$self->{run}}, 'test_parent';
