@@ -142,6 +142,12 @@ sub _assert_deep_equals {
             $ok = 1;
         }
     }
+    elsif (!defined($expected) && !defined($got)) {
+        return 1;
+    }
+    elsif (!defined($expected) || !defined($got)) {
+        return 0;
+    }
     else {
         $ok = $expected eq $got;
     }

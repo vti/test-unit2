@@ -81,6 +81,7 @@ subtest 'assert_deep_equals' => sub {
     ok $case->assert_deep_equals([], []);
     ok $case->assert_deep_equals([1, 2, 3], [1, 2, 3]);
     ok $case->assert_deep_equals([{foo => 'bar'}], [{foo => 'bar'}]);
+    ok $case->assert_deep_equals({foo => undef}, {foo => undef});
 
     ok !$case->assert_deep_equals([], 'foo');
     ok !$case->assert_deep_equals([], {});
@@ -90,6 +91,7 @@ subtest 'assert_deep_equals' => sub {
     ok !$case->assert_deep_equals({foo => {bar => 'qux'}},
         {foo => {'bar' => 'baz'}});
     ok !$case->assert_deep_equals([1, 2], [1, 2, 3]);
+    ok !$case->assert_deep_equals({foo => undef}, {foo => 1});
 };
 
 subtest 'assert_null' => sub {
