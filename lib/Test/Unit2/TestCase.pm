@@ -24,9 +24,7 @@ sub execute {
 
     my @test_methods = $self->_find_test_methods_recursive($test_case);
 
-    my $context = $self->{_context} = {
-        test_case => $test_case
-    };
+    my $context = $self->{_context} = {test_case => $test_case};
 
     $self->notify('before:test_case', $context);
 
@@ -62,6 +60,12 @@ sub assert_raises {
     my $self = shift;
     my $cb   = pop;
 
+    my $message;
+    if (!ref $cb) {
+        $message = $cb;
+        $cb      = pop;
+    }
+
     my ($isa, $re);
 
     if (@_ == 2) {
@@ -80,39 +84,46 @@ sub assert_raises {
         my $e = $@;
 
         if ($re) {
-            return $self->assert($e =~ m/$re/);
+            $message ||= "error message does not match $re";
+            return $self->assert(scalar($e =~ m/$re/), $message);
         }
 
         if ($isa) {
-            return $self->assert(blessed($e) && $e->isa($isa));
+            $message ||=
+              qq{exception isa expected '$isa', got '} . ref($e) . qq{'};
+            return $self->assert(blessed($e) && $e->isa($isa), $message);
         }
 
         return $self->assert(1);
     };
 
-    return $self->assert(0);
+    $message ||= 'no exception was raised';
+    return $self->assert(0, $message);
 }
 
 sub assert_deep_equals {
     my $self = shift;
-    my ($expected, $got) = @_;
+    my ($expected, $got, $message) = @_;
 
-    my $ok = $self->_assert_deep_equals($expected, $got);
+    my $context;
+    my $ok = $self->_assert_deep_equals($expected, $got, \$context, \$message);
 
-    return $self->assert($ok);
+    return $self->assert($ok, $message);
 }
 
 sub _assert_deep_equals {
     my $self = shift;
-    my ($expected, $got) = @_;
+    my ($expected, $got, $context_ref, $message_ref) = @_;
 
     my $ok = 0;
     if (ref($expected)) {
         if (!ref($got)) {
-            $ok = 0;
+            $ok           = 0;
+            $$message_ref = 'expected to be a ' . ref($expected) . ' reference';
         }
         elsif (ref($expected) ne ref($got)) {
-            $ok = 0;
+            $ok           = 0;
+            $$message_ref = 'expected to be a ' . ref($expected) . ' reference';
         }
         elsif (ref($expected) eq 'HASH') {
             my @expected_keys = sort keys %$expected;
@@ -121,13 +132,19 @@ sub _assert_deep_equals {
 
             for (my $i = 0; $i < @expected_keys; $i++) {
                 return 0 unless $expected_keys[$i] eq $got_keys[$i];
-                return 0 unless $self->_assert_deep_equals($expected_keys[$i], $got_keys[$i]);
+                return 0
+                  unless $self->_assert_deep_equals(
+                    $expected_keys[$i], $got_keys[$i],
+                    $context_ref,       $message_ref
+                  );
             }
 
             foreach my $key (keys %$expected) {
                 return 0
-                  unless $self->_assert_deep_equals($expected->{$key},
-                    $got->{$key});
+                  unless $self->_assert_deep_equals(
+                    $expected->{$key}, $got->{$key},
+                    $context_ref,      $message_ref
+                  );
             }
 
             $ok = 1;
@@ -136,7 +153,9 @@ sub _assert_deep_equals {
             return 0 unless @$expected == @$got;
 
             for (my $i = 0; $i < @$expected; $i++) {
-                return 0 unless $self->_assert_deep_equals($expected->[$i], $got->[$i]);
+                return 0
+                  unless $self->_assert_deep_equals($expected->[$i],
+                    $got->[$i], $context_ref, $message_ref);
             }
 
             $ok = 1;
@@ -157,7 +176,7 @@ sub _assert_deep_equals {
 
 sub assert_str_equals {
     my $self = shift;
-    my ($expected, $got) = @_;
+    my ($expected, $got, $message) = @_;
 
     my $ok = 0;
     if (!defined($expected) && !defined($got)) {
@@ -165,21 +184,33 @@ sub assert_str_equals {
     }
     elsif (!defined($expected) || !defined($got)) {
         $ok = 0;
+
+        if (defined($expected)) {
+            $message = "expected to be defined";
+        }
+        else {
+            $message = "expected to be undef";
+        }
     }
     elsif ($expected eq $got) {
         $ok = 1;
     }
+    else {
+        $message = "expected '$expected', got '$got'";
+    }
 
-    return $self->assert($ok);
+    return $self->assert($ok, $message);
 }
 
 sub assert_str_not_equals {
     my $self = shift;
-    my ($expected, $got) = @_;
+    my ($expected, $got, $message) = @_;
 
     my $ok = 0;
     if (!defined($expected) && !defined($got)) {
         $ok = 0;
+
+        $message = "expected one to be defined";
     }
     elsif (!defined($expected) || !defined($got)) {
         $ok = 1;
@@ -187,13 +218,16 @@ sub assert_str_not_equals {
     elsif ($expected ne $got) {
         $ok = 1;
     }
+    else {
+        $message = "expected '$got' to be different from '$expected'";
+    }
 
-    return $self->assert($ok);
+    return $self->assert($ok, $message);
 }
 
 sub assert_num_equals {
     my $self = shift;
-    my ($expected, $got) = @_;
+    my ($expected, $got, $message) = @_;
 
     my $ok = 0;
     if (!defined($expected) && !defined($got)) {
@@ -201,21 +235,33 @@ sub assert_num_equals {
     }
     elsif (!defined($expected) || !defined($got)) {
         $ok = 0;
+
+        if (defined($expected)) {
+            $message = "expected to be defined";
+        }
+        else {
+            $message = "expected to be undef";
+        }
     }
     elsif ($expected == $got) {
         $ok = 1;
     }
+    else {
+        $message = "expected $expected, got $got";
+    }
 
-    return $self->assert($ok);
+    return $self->assert($ok, $message);
 }
 
 sub assert_num_not_equals {
     my $self = shift;
-    my ($expected, $got) = @_;
+    my ($expected, $got, $message) = @_;
 
     my $ok = 0;
     if (!defined($expected) && !defined($got)) {
         $ok = 0;
+
+        $message = "expected one to be defined";
     }
     elsif (!defined($expected) || !defined($got)) {
         $ok = 1;
@@ -223,43 +269,56 @@ sub assert_num_not_equals {
     elsif ($expected != $got) {
         $ok = 1;
     }
+    else {
+        $message = "expected $got to be different from $expected";
+    }
 
-    return $self->assert($ok);
+    return $self->assert($ok, $message);
 }
 
 sub assert_null {
     my $self = shift;
-    my ($got) = @_;
+    my ($got, $message) = @_;
 
-    return $self->assert(!defined($got));
+    $message ||= 'excepted to be undef';
+
+    return $self->assert(!defined($got), $message);
 }
 
 sub assert_not_null {
     my $self = shift;
-    my ($got) = @_;
+    my ($got, $message) = @_;
 
-    return $self->assert(defined($got));
+    $message ||= 'expected to be defined';
+
+    return $self->assert(defined($got), $message);
 }
 
 sub assert_matches {
     my $self = shift;
-    my ($re, $got) = @_;
+    my ($re, $got, $message) = @_;
 
-    return $self->assert($got =~ m/$re/);
+    $message ||= qq{expected to match $re};
+
+    return $self->assert(scalar($got =~ m/$re/), $message);
 }
 
 sub assert_not_matches {
     my $self = shift;
-    my ($re, $got) = @_;
+    my ($re, $got, $message) = @_;
 
-    return $self->assert($got !~ m/$re/);
+    $message ||= qq{expected not to match $re};
+
+    return $self->assert(scalar($got !~ m/$re/), $message);
 }
 
 sub assert {
     my $self = shift;
-    my ($ok) = @_;
+    my ($ok, $message) = @_;
 
     $ok = !!$ok;
+
+    $message ||= "expected to be true";
 
     my $context = $self->{_context};
     if ($context && %$context) {
@@ -270,6 +329,8 @@ sub assert {
             $context->{methods}->[-1]->{ok} = $ok ? 1 : 0;
         }
 
+        $context->{methods}->[-1]->{message} = $message;
+
         if (exists $context->{ok}) {
             $context->{ok} = 0 unless $ok;
         }
@@ -277,7 +338,8 @@ sub assert {
             $context->{ok} = $ok ? 1 : 0;
         }
 
-        $context->{methods}->[-1]->{caller} = (caller(0))[1]. ':'. (caller(0))[2];
+        $context->{methods}->[-1]->{caller} =
+          (caller(0))[1] . ':' . (caller(0))[2];
         $context->{methods}->[-1]->{assert} = (caller(0))[3] =~ m/([^:])+$/;
 
         my $i = 0;
@@ -285,7 +347,8 @@ sub assert {
             if ($caller[0] eq $context->{test_case}) {
                 my $assert = $caller[3];
                 $assert =~ s{.*::}{};
-                $context->{methods}->[-1]->{caller} = $caller[1]. ':'. $caller[2];
+                $context->{methods}->[-1]->{caller} =
+                  $caller[1] . ':' . $caller[2];
                 $context->{methods}->[-1]->{assert} = $assert;
 
                 last;

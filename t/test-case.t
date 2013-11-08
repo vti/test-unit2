@@ -36,7 +36,8 @@ subtest 'success notify before/after test_case' => sub {
                         test_method => 'test_hi',
                         ok          => 1,
                         assert      => 'assert_str_equals',
-                        caller      => re('t/test-case.t:\d+')
+                        caller      => re('t/test-case.t:\d+'),
+                        message     => ignore(),
                     }
                 ]
             }
@@ -81,7 +82,8 @@ subtest 'success notify before/after test_method' => sub {
                         test_method => 'test_hi',
                         ok          => 1,
                         assert      => 'assert_str_equals',
-                        caller      => re('t/test-case.t:\d+')
+                        caller      => re('t/test-case.t:\d+'),
+                        message     => ignore()
                     }
                 ]
             }
@@ -118,7 +120,8 @@ subtest 'failure notify before/after test_case' => sub {
                         test_method => 'test_hi',
                         ok          => 0,
                         assert      => 'assert_str_equals',
-                        caller      => re('t/test-case.t:\d+')
+                        caller      => re('t/test-case.t:\d+'),
+                        message     => ignore(),
                     }
                 ]
             }
@@ -163,7 +166,8 @@ subtest 'failure notify before/after test_method' => sub {
                         test_method => 'test_hi',
                         ok          => 0,
                         assert      => 'assert_str_equals',
-                        caller      => re('t/test-case.t:\d+')
+                        caller      => re('t/test-case.t:\d+'),
+                        message     => ignore(),
                     }
                 ]
             }
@@ -297,19 +301,22 @@ subtest 'fail if one test fails' => sub {
                         test_method => 'test_not_ok',
                         ok          => 0,
                         assert      => 'assert',
-                        caller      => re('t/test-case.t:\d+')
+                        caller      => re('t/test-case.t:\d+'),
+                        message     => ignore(),
                     },
                     {
                         test_method => 'test_ok',
                         ok          => 1,
                         assert      => 'assert',
-                        caller      => re('t/test-case.t:\d+')
+                        caller      => re('t/test-case.t:\d+'),
+                        message     => ignore(),
                     },
                     {
                         test_method => 'test_z_ok',
                         ok          => 1,
                         assert      => 'assert',
-                        caller      => re('t/test-case.t:\d+')
+                        caller      => re('t/test-case.t:\d+'),
+                        message     => ignore(),
                     }
                 ]
             }
@@ -367,7 +374,8 @@ subtest 'stop on first failed assert' => sub {
                         test_method => 'test_me',
                         ok          => 0,
                         assert      => 'assert',
-                        caller      => re('t/test-case.t:\d+')
+                        caller      => re('t/test-case.t:\d+'),
+                        message     => ignore()
                     },
                 ]
             }

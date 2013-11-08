@@ -110,7 +110,7 @@ sub finalize {
         print "\nFAILS:\n";
         foreach my $fail (@fails) {
             print "$counter) $fail->{method}->{caller} - $fail->{method}->{test_method} ($fail->{test_case})\n";
-            print $fail->{method}->{assert}, "\n";
+            print "$fail->{method}->{assert}: $fail->{method}->{message}", "\n";
             $counter++;
         }
     }
