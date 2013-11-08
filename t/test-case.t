@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Deep;
 use Storable qw(dclone);
 
 use Test::Unit2::TestCase;
@@ -24,13 +25,20 @@ subtest 'success notify before/after test_case' => sub {
     $case->execute;
 
     is_deeply(\@before, [{test_case => 'TestCaseSuccess'}]);
-    is_deeply(
+    cmp_deeply(
         \@after,
         [
             {
                 test_case => 'TestCaseSuccess',
                 ok        => 1,
-                methods   => [{test_method => 'test_hi', ok => 1}]
+                methods   => [
+                    {
+                        test_method => 'test_hi',
+                        ok          => 1,
+                        assert      => 'assert_str_equals',
+                        caller      => re('t/test-case.t:\d+')
+                    }
+                ]
             }
         ]
     );
@@ -62,13 +70,20 @@ subtest 'success notify before/after test_method' => sub {
             }
         ]
     );
-    is_deeply(
+    cmp_deeply(
         \@after,
         [
             {
                 test_case => 'TestCaseSuccess',
                 ok        => 1,
-                methods   => [{test_method => 'test_hi', ok => 1}]
+                methods   => [
+                    {
+                        test_method => 'test_hi',
+                        ok          => 1,
+                        assert      => 'assert_str_equals',
+                        caller      => re('t/test-case.t:\d+')
+                    }
+                ]
             }
         ]
     );
@@ -92,13 +107,20 @@ subtest 'failure notify before/after test_case' => sub {
     $case->execute;
 
     is_deeply(\@before, [{test_case => 'TestCaseFailure'}]);
-    is_deeply(
+    cmp_deeply(
         \@after,
         [
             {
                 test_case => 'TestCaseFailure',
                 ok        => 0,
-                methods   => [{test_method => 'test_hi', ok => 0}]
+                methods   => [
+                    {
+                        test_method => 'test_hi',
+                        ok          => 0,
+                        assert      => 'assert_str_equals',
+                        caller      => re('t/test-case.t:\d+')
+                    }
+                ]
             }
         ]
     );
@@ -130,13 +152,20 @@ subtest 'failure notify before/after test_method' => sub {
             }
         ]
     );
-    is_deeply(
+    cmp_deeply(
         \@after,
         [
             {
                 test_case => 'TestCaseFailure',
                 ok        => 0,
-                methods   => [{test_method => 'test_hi', ok => 0}]
+                methods   => [
+                    {
+                        test_method => 'test_hi',
+                        ok          => 0,
+                        assert      => 'assert_str_equals',
+                        caller      => re('t/test-case.t:\d+')
+                    }
+                ]
             }
         ]
     );
@@ -227,6 +256,7 @@ subtest 'fail if one test fails' => sub {
     my @after;
 
     {
+
         package TestCaseOneFails;
         use base 'Test::Unit2::TestCase';
 
@@ -256,16 +286,31 @@ subtest 'fail if one test fails' => sub {
             }
         ]
     );
-    is_deeply(
+    cmp_deeply(
         \@after,
         [
             {
                 test_case => 'TestCaseOneFails',
                 ok        => 0,
                 methods   => [
-                    {test_method => 'test_not_ok', ok => 0},
-                    {test_method => 'test_ok',     ok => 1},
-                    {test_method => 'test_z_ok',   ok => 1}
+                    {
+                        test_method => 'test_not_ok',
+                        ok          => 0,
+                        assert      => 'assert',
+                        caller      => re('t/test-case.t:\d+')
+                    },
+                    {
+                        test_method => 'test_ok',
+                        ok          => 1,
+                        assert      => 'assert',
+                        caller      => re('t/test-case.t:\d+')
+                    },
+                    {
+                        test_method => 'test_z_ok',
+                        ok          => 1,
+                        assert      => 'assert',
+                        caller      => re('t/test-case.t:\d+')
+                    }
                 ]
             }
         ]
@@ -277,10 +322,11 @@ subtest 'stop on first failed assert' => sub {
     my @after;
 
     {
+
         package TestCaseStop;
         use base 'Test::Unit2::TestCase';
 
-        sub test_me     {
+        sub test_me {
             my $self = shift;
 
             $self->assert(1);
@@ -310,14 +356,19 @@ subtest 'stop on first failed assert' => sub {
             }
         ]
     );
-    is_deeply(
+    cmp_deeply(
         \@after,
         [
             {
                 test_case => 'TestCaseStop',
                 ok        => 0,
                 methods   => [
-                    {test_method => 'test_me', ok => 0},
+                    {
+                        test_method => 'test_me',
+                        ok          => 0,
+                        assert      => 'assert',
+                        caller      => re('t/test-case.t:\d+')
+                    },
                 ]
             }
         ]

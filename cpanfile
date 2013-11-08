@@ -4,3 +4,4 @@ requires 'Term::ReadKey';
 requires 'Time::HiRes';
 
 requires 'Test::More';
+requires 'Test::Deep';
