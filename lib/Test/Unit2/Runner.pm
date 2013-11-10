@@ -14,6 +14,7 @@ sub new {
     bless $self, $class;
 
     $self->{output} = $params{output} || Test::Unit2::Output::Default->new;
+    $self->{loader} = $params{loader} || sub { /Test\.pm$/ };
 
     return $self;
 }
@@ -27,12 +28,14 @@ sub run {
     my @test_files;
     File::Find::find(
         sub {
-            push @test_files, $File::Find::name if /Test\.pm$/;
+            local $_ = $File::Find::name;
+            push @test_files, $File::Find::name
+              if $self->{loader}->($File::Find::name);
         },
         @directories
     );
 
-    my $output = Test::Unit2::Output::Default->new;
+    my $output = $self->{output};
 
     $output->start;
 
