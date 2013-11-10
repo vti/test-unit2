@@ -78,20 +78,23 @@ subtest 'assert_deep_equals' => sub {
     $message = _run_case(q{$self->assert_deep_equals({}, [])});
     is($message, 'expected to be a HASH reference');
 
-    #$message = _run_case(q{$self->assert_deep_equals({foo => 'bar'}, {foo => 'baz'})});
-    #is($message, '');
+    $message = _run_case(q{$self->assert_deep_equals({foo => 'bar'}, {foo => 'baz'})});
+    is($message, q{$expected->{foo} = 'bar', $got->{foo} = 'baz'});
 
-    #$message = _run_case(q{$self->assert_deep_equals({foo => 'bar'}, {foo => 'bar', hi => 'there'})});
-    #is($message, '');
+    $message = _run_case(q{$self->assert_deep_equals({foo => 'bar'}, {foo => 'bar', hi => 'there'})});
+    is($message, 'unexpected key $got->{hi}');
 
-    #$message = _run_case(q{$self->assert_deep_equals({foo => {bar => 'qux'}}, {foo => {'bar' => 'baz'}})});
-    #is($message, '');
+    $message = _run_case(q{$self->assert_deep_equals({foo => {bar => 'baz'}}, {foo => {bar => 'baz', hi => 'there'}})});
+    is($message, 'unexpected key $got->{foo}->{hi}');
 
-    #$message = _run_case(q{$self->assert_deep_equals([1, 2], [1, 2, 3])});
-    #is($message, '');
+    $message = _run_case(q{$self->assert_deep_equals({foo => {bar => 'qux'}}, {foo => {'bar' => 'baz'}})});
+    is($message, q/$expected->{foo}->{bar} = 'qux', $got->{foo}->{bar} = 'baz'/);
 
-    #$message = _run_case(q{$self->assert_deep_equals({foo => undef}, {foo => 1})});
-    #is($message, '');
+    $message = _run_case(q{$self->assert_deep_equals([1, 2], [1, 2, 3])});
+    is($message, 'uneven array length, expected 2 got 3');
+
+    $message = _run_case(q{$self->assert_deep_equals({foo => undef}, {foo => 1})});
+    is($message, q{$expected->{foo} = undef, $got->{foo} = '1'});
 };
 
 subtest 'assert_null' => sub {

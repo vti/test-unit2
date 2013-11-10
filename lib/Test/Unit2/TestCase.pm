@@ -105,8 +105,8 @@ sub assert_deep_equals {
     my $self = shift;
     my ($expected, $got, $message) = @_;
 
-    my $context;
-    my $ok = $self->_assert_deep_equals($expected, $got, \$context, \$message);
+    my $context = [];
+    my $ok = $self->_assert_deep_equals($expected, $got, $context, \$message);
 
     return $self->assert($ok, $message);
 }
@@ -126,31 +126,65 @@ sub _assert_deep_equals {
             $$message_ref = 'expected to be a ' . ref($expected) . ' reference';
         }
         elsif (ref($expected) eq 'HASH') {
-            my @expected_keys = sort keys %$expected;
-            my @got_keys      = sort keys %$got;
-            return 0 unless @expected_keys == @got_keys;
-
-            for (my $i = 0; $i < @expected_keys; $i++) {
-                return 0 unless $expected_keys[$i] eq $got_keys[$i];
-                return 0
-                  unless $self->_assert_deep_equals(
-                    $expected_keys[$i], $got_keys[$i],
-                    $context_ref,       $message_ref
-                  );
+            foreach my $key (keys %$got) {
+                push @$context_ref, "->{$key}";
+                if (!exists $expected->{$key}) {
+                    my $context = join '', @$context_ref;
+                    $$message_ref = qq/unexpected key \$got$context/;
+                    return 0;
+                }
+                pop @$context_ref;
             }
 
             foreach my $key (keys %$expected) {
-                return 0
-                  unless $self->_assert_deep_equals(
-                    $expected->{$key}, $got->{$key},
-                    $context_ref,      $message_ref
-                  );
+                push @$context_ref, "->{$key}";
+                if (!exists $got->{$key}) {
+                    my $context = join '', @$context_ref;
+                    $$message_ref = qq/key does not exist \$got$context/;
+                    return 0;
+                }
+                pop @$context_ref;
+            }
+
+            foreach my $key (keys %$expected) {
+                push @$context_ref, "->{$key}";
+
+                unless (
+                    $self->_assert_deep_equals(
+                        $expected->{$key}, $got->{$key},
+                        $context_ref,      $message_ref
+                    )
+                  )
+                {
+                    if (!$$message_ref) {
+                        my $expected_value =
+                          defined $expected->{$key}
+                          ? qq{'$expected->{$key}'}
+                          : 'undef';
+                        my $got_value =
+                          defined $got->{$key}
+                          ? qq{'$got->{$key}'}
+                          : 'undef';
+                        my $context = join '', @$context_ref;
+                        $$message_ref = qq{\$expected$context = $expected_value}
+                          . qq{, \$got$context = $got_value};
+                    }
+                    return 0;
+                }
+
+                pop @$context_ref;
             }
 
             $ok = 1;
         }
         elsif (ref($expected) eq 'ARRAY') {
-            return 0 unless @$expected == @$got;
+            if (@$expected != @$got) {
+                $$message_ref =
+                    'uneven array length, expected '
+                  . (@$expected) . ' got '
+                  . (@$got);
+                return 0;
+            }
 
             for (my $i = 0; $i < @$expected; $i++) {
                 return 0
