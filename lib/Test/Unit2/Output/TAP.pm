@@ -15,6 +15,8 @@ sub new {
     return $self;
 }
 
+sub start {}
+
 sub watch {
     my $self = shift;
     my ($test_case) = @_;
