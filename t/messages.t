@@ -70,13 +70,16 @@ subtest 'assert_deep_equals' => sub {
     my $message;
 
     $message = _run_case(q{$self->assert_deep_equals([], 'foo')});
-    is($message, 'expected to be a ARRAY reference');
+    is($message, '$got expected to be a ARRAY reference');
 
     $message = _run_case(q{$self->assert_deep_equals([], {})});
-    is($message, 'expected to be a ARRAY reference');
+    is($message, '$got expected to be a ARRAY reference');
 
     $message = _run_case(q{$self->assert_deep_equals({}, [])});
-    is($message, 'expected to be a HASH reference');
+    is($message, '$got expected to be a HASH reference');
+
+    $message = _run_case(q{$self->assert_deep_equals({foo => []}, {foo => {}})});
+    is($message, '$got->{foo} expected to be a ARRAY reference');
 
     $message = _run_case(q{$self->assert_deep_equals({foo => 'bar'}, {foo => 'baz'})});
     is($message, q{$expected->{foo} = 'bar', $got->{foo} = 'baz'});

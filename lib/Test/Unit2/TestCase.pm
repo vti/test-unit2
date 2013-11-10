@@ -119,11 +119,13 @@ sub _assert_deep_equals {
     if (ref($expected)) {
         if (!ref($got)) {
             $ok           = 0;
-            $$message_ref = 'expected to be a ' . ref($expected) . ' reference';
+            my $context = join '', @$context_ref;
+            $$message_ref = qq{\$got$context expected to be a } . ref($expected) . ' reference';
         }
         elsif (ref($expected) ne ref($got)) {
             $ok           = 0;
-            $$message_ref = 'expected to be a ' . ref($expected) . ' reference';
+            my $context = join '', @$context_ref;
+            $$message_ref = qq{\$got$context expected to be a } . ref($expected) . ' reference';
         }
         elsif (ref($expected) eq 'HASH') {
             foreach my $key (keys %$got) {
